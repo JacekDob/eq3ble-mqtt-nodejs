@@ -87,7 +87,7 @@ sudo node eq3.js
 ## With logging
 
 ```
-node eq3.js | tee -a eq3.log
+sudo node eq3.js | tee -a eq3.log
 ```
 
 # Usage
