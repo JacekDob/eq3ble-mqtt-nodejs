@@ -24,15 +24,14 @@ npm --unsafe-perm install eq3ble mqtt
 ```
 
 ## Changes in eq3ble library
-Changes to be made in
-```
-node_modules/eq3ble/dist/index.js
-```
+
+### node_modules/eq3ble/dist/index.js
+
 * getInfo - current implementation crashes automatic mode
 ```
 key: 'getInfo',
     value: function getInfo() {
-      return this.writeAndGetNotification(_interface.payload.setAutomaticMode()).then(function (info) {
+      return this.writeAndGetNotification(_interface.payload.setDatetime(new Date())).then(function (info) {
         return (0, _interface.parseInfo)(info);
       });
     }
@@ -46,8 +45,24 @@ key: 'getInfo',
         return (0, _interface.parseInfo)(info);
       });
     }
+```
+
+### node_modules/eq3ble/dist/interface.js
 
 ```
+  setDatetime: function setDatetime(date) {
+    var b = Buffer.alloc(7);
+    b[0] = 3;
+    b[1] = (date.getFullYear() % 100);
+    b[2] = (date.getMonth() + 1);
+    b[3] = date.getDate();
+    b[4] = date.getHours();
+    b[5] = date.getMinutes();
+    b[6] = date.getSeconds();
+    return b;
+  }
+```
+
 # Configuration
 Configuration done in
 ```
