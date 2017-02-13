@@ -3,10 +3,7 @@ Handles EQ3 Bluetooth thermostats via mqtt in nodejs.
 For Raspberry Pi 3.
 
 ## eq3ble
-Code uses node-eq3ble library below. Many thanks to author for developing it.
-```
-https://github.com/maxnowack/node-eq3ble
-```
+Code uses [node-eq3ble](https://github.com/maxnowack/node-eq3ble). Many thanks to author for developing it.
 
 # Installation
 On clean (x/rasp)bian
