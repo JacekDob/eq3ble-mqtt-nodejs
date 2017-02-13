@@ -121,3 +121,11 @@ sudo node eq3.js | tee -a eq3.log
 * /eq3_device1/in/openWindow [0-closed, 1-opened] - closed / opened window
 * /eq3_device1/in/needsHeating [0-not needing to heat (valvePosition == 0), 1-needsHeating (valvePosition > 0)]
 * /eq3_device1/in/estimatedTemperature [1.5-29.5] - estimated temerature based on targetTemperature and valvePosition
+* /eq3_device1/in/lowBattery [0-battery ok, 1-battery low] - battery status
+* /eq3_device1/in/dst [0-no, 1-yes] - daylight saving time
+* /eq3_device1/in/holiday [0-no, 1-yes] - holiday mode
+
+For detailed description check
+```
+https://github.com/maxnowack/node-eq3ble
+```
