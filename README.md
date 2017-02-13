@@ -3,7 +3,7 @@ Handles EQ3 Bluetooth thermostats via mqtt in nodejs.
 For Raspberry Pi 3.
 
 ## eq3ble
-Code uses [node-eq3ble](https://github.com/maxnowack/node-eq3ble). Many thanks to author for developing it.
+Code uses [library node-eq3ble](https://github.com/maxnowack/node-eq3ble). Many thanks to author for developing it.
 
 # Installation
 On clean (x/rasp)bian
@@ -128,10 +128,7 @@ sudo node eq3.js | tee -a eq3.log
 * /eq3_device1/in/dst [0-no, 1-yes] - daylight saving time
 * /eq3_device1/in/holiday [0-no, 1-yes] - holiday mode
 
-For detailed description check
-```
-https://github.com/maxnowack/node-eq3ble
-```
+For detailed description check [library node-eq3ble](https://github.com/maxnowack/node-eq3ble) specification.
 
 # License
 
