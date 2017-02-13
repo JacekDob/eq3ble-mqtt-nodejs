@@ -1,5 +1,8 @@
 // eq3ble library location:
-// ~/bt/node_modules/eq3ble/dist
+// node_modules/eq3ble/dist
+
+// set time zone
+process.env.TZ = 'Europe/Amsterdam'; 
 
 // libraries:
 var EQ3BLE = require('eq3ble').default;
@@ -8,9 +11,6 @@ var mqtt = require('mqtt');
 var cfg = require('./cfg.js');
 
 var discovered = {};
-
-// message queue
-//var messageQueue = queue();
 
 var connectDate = new Date();
 var publishOptions = { qos: 2, retain: true };
@@ -52,7 +52,7 @@ function processMessage(topic, message) {
 	        }
 	}
 
-        if (cfg.btNames[btName].server == cfg.server) {
+        if (cfg.btNames[btName].server == cfg.server || !cfg.btNames[btName].server) {
 
 	        var device = discovered[address];
         	if (!device) {
@@ -103,16 +103,6 @@ function onDiscover(device) {
         }
 }
 
-/*
-// discovery event
-EQ3BLE.discover((device) => {
-	var deviceInfo = { address: device.address, rssi: device._peripheral.rssi, uuid: device.uuid };
-	logI('['+ device.address +'] Discovered EQ3:' + JSON.stringify(deviceInfo));
-	device.deviceInfo = deviceInfo;
-	discovered[device.address] = device;
-});
-*/
-
 function calcEstimatedTemperature(targetTemperature, valvePosition) {
 	var estimatedTemperature = targetTemperature;
 	if (valvePosition >= 100)
@@ -140,12 +130,13 @@ function processInfo(device, info) {
 	client.publish('/' + device.btName + '/in/openWindow', info.status.openWindow ? '1' : '0', publishOptions);
 	client.publish('/' + device.btName + '/in/needsHeating', info.valvePosition > 0 ? '1' : '0', publishOptions);
 	client.publish('/' + device.btName + '/in/estimatedTemperature', estimatedTemperature.toString(), publishOptions);
+	client.publish('/' + device.btName + '/in/lowBattery', info.status.lowBaterry ? '1' : '0', publishOptions);
+	client.publish('/' + device.btName + '/in/dst', info.status.dst ? '1' : '0', publishOptions);
+	client.publish('/' + device.btName + '/in/holiday', info.status.holiday ? '1' : '0', publishOptions);
 
-	//logV('Published to MQTT');
 	var performanceEnd = new Date();
 	var took = performanceEnd.getTime() - device.performanceStart.getTime();
 	logI('[' + device.address +'] ['+device.btName+'] Finished in ' + took + ' millis');
-	//logV('Disconnecting... ' + device.address);
 	device.disconnect();
 }
 
@@ -181,7 +172,10 @@ function getInfo(device) {
 // console login
 
 function log(level, message) {
-	var d = '['+cfg.server+'][' + new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '') + ']';
+	var date = new Date();
+	date.setTime(date.getTime() - date.getTimezoneOffset()*60*1000);
+
+	var d = '['+cfg.server+'][' + date.toISOString().replace(/T/, ' ').replace(/\..+/, '') + ']';
 	var l = '[' + level + ']';
 	console.log(d + ' ' + l + ' ' + message);
 }
