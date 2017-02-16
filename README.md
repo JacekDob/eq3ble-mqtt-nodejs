@@ -107,7 +107,13 @@ sudo node eq3.js
 ```
 sudo node eq3.js | tee -a eq3.log
 ```
+## Autorun
 
+```
+sudo crontab -e
+#add at the end of file
+@reboot /usr/bin/node /home/pi/eq3.js | /usr/bin/tee -a /home/pi/eq3.log
+```
 # Usage
 
 ## MQTT requests
