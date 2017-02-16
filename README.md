@@ -112,13 +112,27 @@ sudo node eq3.js | tee -a eq3.log
 
 ## MQTT requests
 
-* /eq3_device1/getInfo - get info from EQ3
-* /eq3_device1/outwish/wishedTemperature/ - sets temperature
+* /eq3_device1/getInfo - gets info from EQ3 (see below)
+* /eq3_device1/outwish/wishedTemperature [4.5-30] - sets temperature
+* /eq3_device1/outwish/outwish/requestProfile
+```
+{"periods":[{"temperature":17,"from":0,"to":42,"fromHuman":0,"toHuman":7},{"temperature":18.5,"from":42,"to":129,"fromHuman":7,"toHuman":21.5},{"temperature":17,"from":129,"to":144,"fromHuman":21.5,"toHuman":24}],"dayOfWeek":0,"dayOfWeekName":"SATURDAY"}
+```
+* /eq3_device1/outwish/outwish/setProfile/[0-6] - 0-saturday, 1-sunday, 2-monday, ...
+```
+[{"temperature":17,"from":0,"to":42,"fromHuman":0,"toHuman":7},{"temperature":18.5,"from":42,"to":129,"fromHuman":7,"toHuman":21.5},{"temperature":17,"from":129,"to":144,"fromHuman":21.5,"toHuman":24}]
+```
+* /eq3_device1/outwish/outwish/boost [0|1]
+* /eq3_device1/outwish/outwish/manualMode
+* /eq3_device1/outwish/outwish/automaticMode
+* /eq3_device1/outwish/outwish/ecoMode
+* /eq3_device1/outwish/outwish/setLock [0|1]
+* /eq3_device1/outwish/outwish/turn [0-off (4.5) | 1-on (30)]
 
 ## MQTT response
 
 * /eq3_device1/in/rssi [0-1xx] - BT signal strength * -1
-* /eq3_device1/in/targetTemperature [4.5-29.5]
+* /eq3_device1/in/targetTemperature [4.5-30]
 * /eq3_device1/in/valvePosition [0-100]
 * /eq3_device1/in/manual [0-automatic, 1-manual] - manual / automatic mode
 * /eq3_device1/in/openWindow [0-closed, 1-opened] - closed / opened window
