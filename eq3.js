@@ -1,12 +1,10 @@
 // eq3ble library location:
 // node_modules/eq3ble/dist
 
-// set time zone
-process.env.TZ = 'Europe/Amsterdam'; 
-
 // libraries:
 var EQ3BLE = require('eq3ble').default;
 var noble = require('noble');
+var NobleDevice = require('noble-device');
 var mqtt = require('mqtt');
 var cfg = require('./cfg.js');
 
@@ -14,18 +12,60 @@ var discovered = {};
 
 var connectDate = new Date();
 var publishOptions = { qos: 2, retain: true };
+var queue = [];
 
-var client = mqtt.connect(cfg.mqttServer.address, { username: cfg.mqttServer.username, password: cfg.mqttServer.password, will: { topic: '/eq3_master/status', payload: '0', qos: 2, retain: true } });
-client.publish('/eq3_master/status', '1', publishOptions);
+var client = mqtt.connect(cfg.mqttServer.address, { username: cfg.mqttServer.username, password: cfg.mqttServer.password, will: { topic: '/eq3_master/'+cfg.server+'/status', payload: '0', qos: 2, retain: true } });
+client.publish('/eq3_master/'+cfg.server+'/status', '1', publishOptions);
 client.subscribe('/+/outwish/+');
 
 client.on('message', function (topic, message) {
-	logV('New MQTT message: [topic=' + topic + '] [message=' + message.toString() + ']');
+  logV('New MQTT message: [topic=' + topic + '] [message=' + message.toString() + ']');
 	
-	var d = new Date();
-	if (d.getTime() - connectDate.getTime() > 5000)
-		processMessage(topic, message);
+  var d = new Date();
+  if (d.getTime() - connectDate.getTime() > 500) {
+    queue.push({topic:topic, message: message});
+    processQueue();
+  }
 });
+
+var processing = false;
+function processQueue() {
+  logV('Queue [size='+queue.length+'], [processing='+processing+']');
+  if (!processing && queue.length > 0) {
+    processing = true;
+    task = queue[0];
+    processMessage(task.topic, task.message);
+  }
+}
+
+var timeoutCount = 0;
+
+function finishedProcessing() {
+  timeoutCount = 0;
+  queue.splice(0, 1);
+  processing = false;
+  processQueue();
+}
+
+function failedProcessing() {
+  timeoutCount = 0;
+  queue.splice(0, 1);
+  processing = false;
+  processQueue();
+}
+
+function timeoutProcessing() {
+  timeoutCount++;
+  if (timeoutCount >= 3) {
+    logE('[Timout='+timeoutCount+'] Giving up');
+    queue.splice(0, 1);
+    timeoutCount = 0;
+  } else {
+    logW('[Timout='+timeoutCount+'] Retrying');
+  }
+  processing = false;
+  processQueue();
+}
 
 function processMessage(topic, message) {
 	var m = message.toString();
@@ -34,13 +74,9 @@ function processMessage(topic, message) {
 	var btName = topic.substring(i1+1, i2);
 	var action = topic.substring(i2+1);
 
-	if (action != 'outwish/wishedTemperature' && action != 'outwish/getInfo')
-		return;
-
-
 	var address;
 
-	if (btName[2] == ':') {
+	if (btName[2] == ':' && btName[5] == ':' && btName[8] == ':' && btName[11] == ':') {
 		address = btName;
 	} else {
 		address = cfg.btNames[btName].address;
@@ -57,19 +93,42 @@ function processMessage(topic, message) {
 	        var device = discovered[address];
         	if (!device) {
 	                logE('Device with [address=' + address + '] not discovered');
+			failedProcessing();
 	                return;
 	        } else {
         	        //logV('Device is already discovered, [rssi=' + device._peripheral.rssi + ']');
 	        }
 
                 device.btName = btName;
+		logV(action);
                 if (action == 'outwish/wishedTemperature') {
                         setTemperature(device, m);
-                } if (action == 'outwish/getInfo') {
+                } else if (action == 'outwish/getInfo') {
                         getInfo(device);
-                }
+                } else if (action == 'outwish/requestProfile') {
+                        requestProfile(device, m);
+                } else if (action.indexOf('outwish/setProfile') >= 0) {
+			var day = action.substring(action.lastIndexOf('/')+1);
+			var periods = JSON.parse(m);
+                        setProfile(device, day, periods);
+		} else if (action == 'outwish/boost') {
+                        setBoost(device, m);
+ 		} else if (action == 'outwish/manualMode') {
+                        manualMode(device);
+		} else if (action == 'outwish/automaticMode') {
+                        automaticMode(device);
+                } else if (action == 'outwish/ecoMode') {
+                        ecoMode(device);
+		} else if (action == 'outwish/setLock') {
+                        setLock(device, m);                
+                } else if (action == 'outwish/turn') {
+                        turn(device, m);
+                } else {
+			logW('['+cfg.btNames[btName].address +'] ['+cfg.btNames[btName].name+'] [Command='+action+'] not recognized');
+		}
         } else {
-                logV('['+cfg.btNames[btName].address +'] ['+cfg.btNames[btName].name+'] Skipping');
+                logV('['+cfg.btNames[btName].address +'] ['+cfg.btNames[btName].name+'] To be processed by other server, skipping');
+		finishedProcessing();
                 return;
         }
 }
@@ -130,46 +189,105 @@ function processInfo(device, info) {
 	client.publish('/' + device.btName + '/in/openWindow', info.status.openWindow ? '1' : '0', publishOptions);
 	client.publish('/' + device.btName + '/in/needsHeating', info.valvePosition > 0 ? '1' : '0', publishOptions);
 	client.publish('/' + device.btName + '/in/estimatedTemperature', estimatedTemperature.toString(), publishOptions);
-	client.publish('/' + device.btName + '/in/lowBattery', info.status.lowBaterry ? '1' : '0', publishOptions);
+	client.publish('/' + device.btName + '/in/lowBattery', info.status.lowBattery ? '1' : '0', publishOptions);
 	client.publish('/' + device.btName + '/in/dst', info.status.dst ? '1' : '0', publishOptions);
 	client.publish('/' + device.btName + '/in/holiday', info.status.holiday ? '1' : '0', publishOptions);
-
-	var performanceEnd = new Date();
-	var took = performanceEnd.getTime() - device.performanceStart.getTime();
-	logI('[' + device.address +'] ['+device.btName+'] Finished in ' + took + ' millis');
-	device.disconnect();
 }
 
 
 function setTemperature(device, t) {
-	device.performanceStart = new Date();
-	logV('['+ device.address +'] ['+device.btName+'] Connecting...');
 
-	device.connectAndSetup().then(() => {
-		logV('[VERB]: Setting [temperature=' + t + ']');
-		device.setTemperature(t).then((info) => {
-                	processInfo(device, info);
-                });
-        }).catch(function(error) {
-            logE('['+ device.address +'] Set Temperature failed! ' + error);
-        });        
+  device.afterConnect(device.setTemperature.bind(device, t), (info) => {
+    processInfo(device, info);
+  });
+
 }
+
+function requestProfile(device, day) {
+
+  device.afterConnect(device.requestProfile.bind(device, day), (profile) => {
+    client.publish('/' + device.btName + '/in/profile/' + profile.dayOfWeek, JSON.stringify(profile.periods), publishOptions);
+    logI('['+ device.address +'] ['+device.btName+'] Profile: ' + JSON.stringify(profile));
+  });
+
+}
+
+function setProfile(device, day, periods) {
+
+  device.afterConnect(device.setProfile.bind(device, day, periods), (result) => {
+    if (result) { 
+      logI('['+ device.address +'] ['+device.btName+'] Setting profile OK.');
+    } else {
+      logE('['+ device.address +'] ['+device.btName+'] Setting profile failed!');
+    }
+  });
+
+}
+
+function setBoost(device, enable) {
+
+  device.afterConnect(device.setBoost.bind(device, enable == '1' ? true : false), (result) => {
+    processInfo(device, result);
+  });
+
+}
+
+function manualMode(device) {
+
+  device.afterConnect(device.manualMode.bind(device), (result) => {
+    processInfo(device, result);
+  });
+
+}
+
+function automaticMode(device) {
+
+  device.afterConnect(device.automaticMode.bind(device), (result) => {
+    processInfo(device, result);
+  });
+
+}
+
+function setLock(device, enable) {
+
+  device.afterConnect(device.setLock.bind(device, enable == '1' ? true : false), (result) => {
+    logI('Setting lock='+JSON.stringify(result)+' OK');
+  });
+
+}
+
+function ecoMode(device) {
+
+  device.afterConnect(device.ecoMode.bind(device), (result) => {
+    logI('Setting eco mode='+JSON.stringify(result)+' OK');
+  });
+
+}
+
+function turn(device, turnOn) {
+
+  if (turnOn == '1') {
+    device.afterConnect(device.turnOn.bind(device), (result) => {
+      logI('Turning on='+JSON.stringify(result)+' OK');
+    });
+  } else if (turnOn == '0') {
+    device.afterConnect(device.turnOff.bind(device), (result) => {
+      logI('Turning off='+JSON.stringify(result)+' OK');
+    });
+  }
+
+}
+
 
 function getInfo(device) {
-        device.performanceStart = new Date();
-        logV('['+ device.address +'] ['+device.btName+'] Connecting...');
 
-	device.connectAndSetup().then(() => {
-		logV('['+ device.address +'] ['+device.btName+'] Getting info...');
-        	device.getInfo().then((info) => {
-			processInfo(device, info);
-		});                
-        }).catch(function(error) {
-            logE('['+ device.address +'] ['+device.btName+'] Get Info failed! ' + error);
-        });
+  device.afterConnect(device.getInfo.bind(device), (info) => {
+    processInfo(device, info);
+  });
+
 }
 
-// console login
+// console log
 
 function log(level, message) {
 	var date = new Date();
@@ -199,3 +317,49 @@ function logE(message) {
 function logW(message) {
         log('WARN', message);
 }
+
+// 
+
+var timeoutId;
+
+NobleDevice.prototype.afterConnect = NobleDevice.prototype.afterConnect = function(fn, callback, retainConnection) {
+  performanceStart = new Date();
+  timeoutId = setTimeout(function() {timeoutProcessing();}, 30000);
+
+  if (this._peripheral.state === 'connected') {
+    fn().then((result) => {
+      //logI('['+ this.address +'] ['+this.btName+'] Function [result='+JSON.stringify(result)+']');
+      callback(result);
+      var performanceEnd = new Date();
+      var took = performanceEnd.getTime() - performanceStart.getTime();
+      logI('[' + this.address +'] ['+this.btName+'] Finished in ' + took + ' millis');
+      if (!retainConnection)
+        device.disconnect();
+      clearTimeout(timeoutId);
+      finishedProcessing();
+    });
+  } else {
+    logV('['+ this.address +'] ['+this.btName+'] Connecting...');
+    this.connectAndSetup().then(() => {
+      logV('['+ this.address +'] ['+this.btName+'] Connected, running function');
+      fn().then((result) => {
+        //logI('['+ this.address +'] ['+this.btName+'] Function [result='+JSON.stringify(result)+']');
+        callback(result);
+        var performanceEnd = new Date();
+        var took = performanceEnd.getTime() - performanceStart.getTime();
+        logI('['+this.address+'] ['+this.btName+'] Finished in ' + took + ' millis');
+        if (!retainConnection)
+          this.disconnect();
+        clearTimeout(timeoutId);
+	finishedProcessing();
+      }).catch(function(error) {
+      logE('['+ this.address +'] ['+this.btName+'] Running function failed! ' + error);
+      failedProcessing();
+    });
+
+    }).catch(function(error) {
+      logE('['+ this.address +'] ['+this.btName+'] Connecting failed! ' + error);
+      failedProcessing();
+    });
+  }
+};
