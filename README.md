@@ -118,6 +118,23 @@ sudo crontab -e
 
 For detailed description check [library node-eq3ble](https://github.com/maxnowack/node-eq3ble) specification.
 
+# Integration with OPENHAB2
+
+```
+Number eq3_device1_getInfo                "getInfo [%d]"                          (eq3_device1_gValues)     {mqtt=">[broker:/eq3_device1/outwish/getInfo:command:*:default]"}
+Number eq3_device1_rssi                   "RSSI [%d dbm]"                         (eq3_device1_gValues)     {mqtt="<[broker:/eq3_device1/in/rssi:state:default]"}
+Number eq3_device1_targetTemperature      "targetTemperature [%.1f °C]"           (eq3_device1_gValues)     {mqtt="<[broker:/eq3_device1/in/targetTemperature:state:default]"}
+Number eq3_device1_valvePosition          "valvePosition [%d %%]"                 (eq3_device1_gValues)     {mqtt="<[broker:/eq3_device1/in/valvePosition:state:default]"}
+Number eq3_device1_manual                 "manual [%d]"                           (eq3_device1_gValues)     {mqtt="<[broker:/eq3_device1/in/manual:state:default]"}
+Number eq3_device1_openWindow             "openWindow [%d]"                       (eq3_device1_gValues)     {mqtt="<[broker:/eq3_device1/in/openWindow:state:default]"}
+Number eq3_device1_needsHeating           "needsHeating [%d]"                     (eq3_device1_gValues)     {mqtt="<[broker:/eq3_device1/in/needsHeating:state:default]"}
+Number eq3_device1_estimatedTemperature   "estimatedTemperature [%.1f °C]"        (eq3_device1_gValues)     {mqtt="<[broker:/eq3_device1/in/estimatedTemperature:state:default]"}
+Number eq3_device1_lowBattery             "lowBattery [%d]"                       (eq3_device1_gValues)     {mqtt="<[broker:/eq3_device1/in/lowBattery:state:default]"}
+Number eq3_device1_dst                    "dst [%d]"                              (eq3_device1_gValues)     {mqtt="<[broker:/eq3_device1/in/dst:state:default]"}
+Number eq3_device1_holiday                "holiday [%d]"                          (eq3_device1_gValues)     {mqtt="<[broker:/eq3_device1/in/holiday:state:default]"}
+
+```
+
 # Troubleshooting
 
 Check if You have proper version of nodejs
