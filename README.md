@@ -120,6 +120,19 @@ For detailed description check [library node-eq3ble](https://github.com/maxnowac
 
 # Integration with OPENHAB2
 
+## Installation
+
+
+
+## Integration
+
+### Items
+
+Create new file
+```
+/etc/openhab2/items/eq3.items
+```
+With following content:
 ```
 Number eq3_device1_getInfo                "getInfo [%d]"                          (eq3_device1_gValues)     {mqtt=">[broker:/eq3_device1/outwish/getInfo:command:*:default]"}
 Number eq3_device1_rssi                   "RSSI [%d dbm]"                         (eq3_device1_gValues)     {mqtt="<[broker:/eq3_device1/in/rssi:state:default]"}
@@ -132,6 +145,24 @@ Number eq3_device1_estimatedTemperature   "estimatedTemperature [%.1f °C]"     
 Number eq3_device1_lowBattery             "lowBattery [%d]"                       (eq3_device1_gValues)     {mqtt="<[broker:/eq3_device1/in/lowBattery:state:default]"}
 Number eq3_device1_dst                    "dst [%d]"                              (eq3_device1_gValues)     {mqtt="<[broker:/eq3_device1/in/dst:state:default]"}
 Number eq3_device1_holiday                "holiday [%d]"                          (eq3_device1_gValues)     {mqtt="<[broker:/eq3_device1/in/holiday:state:default]"}
+
+```
+
+### Rules
+
+Create new file
+```
+/etc/openhab2/rules/rules.items
+```
+With following content to get updates every 15 minutes:
+
+```
+rule "EQ-3 GetInfo"
+when
+        Time cron "15 0,15,30,45 * * * ?"
+then
+        eq3_device1_getInfo.sendCommand(0)        
+end
 
 ```
 
