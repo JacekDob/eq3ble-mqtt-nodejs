@@ -20,6 +20,8 @@ client.subscribe('/+/outwish/+');
 
 client.on('message', function (topic, message) {
   logV('New MQTT message: [topic=' + topic + '] [message=' + message.toString() + ']');
+  if (cfg.prefix && !topic.startsWith('/' + cfg.prefix))
+    return;
 	
   var d = new Date();
   if (d.getTime() - connectDate.getTime() > 500) {
@@ -79,11 +81,12 @@ function processMessage(topic, message) {
 	if (btName[2] == ':' && btName[5] == ':' && btName[8] == ':' && btName[11] == ':') {
 		address = btName;
 	} else {
-		address = cfg.btNames[btName].address;
-		if (!address) {
+		if (!cfg.btNames[btName]) {
 			logE('[name=' + btName + '] not mapped to address');
+			failedProcessing();
 			return;
 		} else {
+			address = cfg.btNames[btName].address;
 	                //logV('[name=' + btName + '] mapped to [address=' + address + ']');
 	        }
 	}
