@@ -28,43 +28,11 @@ npm --unsafe-perm install eq3ble mqtt
 
 ## Changes in eq3ble library
 
-### node_modules/eq3ble/dist/index.js
+Apply changes in files
+* node_modules/eq3ble/dist/index.js
+* node_modules/eq3ble/dist/interface.js
 
-* getInfo - current implementation crashes automatic mode
-```
-key: 'getInfo',
-    value: function getInfo() {
-      return this.writeAndGetNotification(_interface.payload.setDatetime(new Date())).then(function (info) {
-        return (0, _interface.parseInfo)(info);
-      });
-    }
-```
-
-* setTemperature - getting and parsing response
-```
-    key: 'setTemperature',
-    value: function setTemperature(temperature) {
-      return this.writeAndGetNotification(_interface.payload.setTemperature(temperature)).then(function (info) {
-        return (0, _interface.parseInfo)(info);
-      });
-    }
-```
-
-### node_modules/eq3ble/dist/interface.js
-
-```
-  setDatetime: function setDatetime(date) {
-    var b = Buffer.alloc(7);
-    b[0] = 3;
-    b[1] = (date.getFullYear() % 100);
-    b[2] = (date.getMonth() + 1);
-    b[3] = date.getDate();
-    b[4] = date.getHours();
-    b[5] = date.getMinutes();
-    b[6] = date.getSeconds();
-    return b;
-  }
-```
+from [updated library](https://github.com/JacekDob/node-eq3ble)
 
 # Configuration
 Configuration done in
@@ -149,6 +117,18 @@ sudo crontab -e
 * /eq3_device1/in/holiday [0-no, 1-yes] - holiday mode
 
 For detailed description check [library node-eq3ble](https://github.com/maxnowack/node-eq3ble) specification.
+
+# Troubleshooting
+
+Check if You have proper version of nodejs
+
+```
+node -v
+```
+For me works
+```
+v7.4.0
+```
 
 # License
 
