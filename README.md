@@ -32,7 +32,7 @@ Apply changes in files
 * node_modules/eq3ble/dist/index.js
 * node_modules/eq3ble/dist/interface.js
 
-from [updated library](https://github.com/JacekDob/node-eq3ble)
+from [updated library](https://github.com/JacekDob/eq3ble-mqtt-nodejs/tree/master/library)
 
 # Configuration
 Configuration done in
@@ -135,6 +135,14 @@ Create new file
 With following content:
 ```
 Number eq3_device1_getInfo                "getInfo [%d]"                          (eq3_device1_gValues)     {mqtt=">[broker:/eq3_device1/outwish/getInfo:command:*:default]"}
+Number eq3_device1_setTemperature         "setTemperature [%.1f °C]"              (eq3_device1_gValues)     {mqtt=">[broker:/eq3_device1/outwish/wishedTemperature:command:*:default]"}
+Number eq3_device1_boost                  "boost [%d]"                            (eq3_device1_gValues)     {mqtt=">[broker:/eq3_device1/outwish/boost:command:*:default]"}
+Number eq3_device1_manualMode             "manualMode [%d]"                       (eq3_device1_gValues)     {mqtt=">[broker:/eq3_device1/outwish/manualMode:command:*:default]"}
+Number eq3_device1_automaticMode          "automaticMode [%d]"                    (eq3_device1_gValues)     {mqtt=">[broker:/eq3_device1/outwish/automaticMode:command:*:default]"}
+Number eq3_device1_ecoMode                "ecoMode [%d]"                          (eq3_device1_gValues)     {mqtt=">[broker:/eq3_device1/outwish/ecoMode:command:*:default]"}
+Number eq3_device1_setLock                "setLock [%d]"                          (eq3_device1_gValues)     {mqtt=">[broker:/eq3_device1/outwish/setLock:command:*:default]"}
+Number eq3_device1_turn                   "turn [%d]"                             (eq3_device1_gValues)     {mqtt=">[broker:/eq3_device1/outwish/turn:command:*:default]"}
+
 Number eq3_device1_rssi                   "RSSI [%d dbm]"                         (eq3_device1_gValues)     {mqtt="<[broker:/eq3_device1/in/rssi:state:default]"}
 Number eq3_device1_targetTemperature      "targetTemperature [%.1f °C]"           (eq3_device1_gValues)     {mqtt="<[broker:/eq3_device1/in/targetTemperature:state:default]"}
 Number eq3_device1_valvePosition          "valvePosition [%d %%]"                 (eq3_device1_gValues)     {mqtt="<[broker:/eq3_device1/in/valvePosition:state:default]"}
