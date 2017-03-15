@@ -45,7 +45,7 @@ Address, username and password
 exports.mqttServer = { address: 'tcp://localhost', username: 'user', password: 'pass' };
 ```
 ## Multiple servers
-Set to 1 if only one used
+Set to 1 if only one used, if not defined, 1 will be used.
 ```
 exports.server = 1;
 ```
@@ -58,8 +58,7 @@ Sample configuration for one device
 * server - server to handle MQTT requests
 
 ```
-exports.btNames['00:11:22:33:44:55'] = { name: 'eq3_device1', address: '00:11:22:33:44:55', server: 1 };
-exports.btNames['eq3_device1'] = exports.btNames['00:11:22:33:44:55'];
+exports.btNames['eq3_device1'] = { name: 'eq3_device1', address: '00:11:22:33:44:55', server: 1 };
 ```
 
 # Running
