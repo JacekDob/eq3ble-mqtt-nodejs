@@ -50,6 +50,14 @@ Set to 1 if only one used, if not defined, 1 will be used.
 exports.server = 1;
 ```
 
+## Automatic server assignment
+Set to 'file' if there should be config file used for server assignment.
+Otherewise set to false (or remove) so server assignment will be done automatically based on RSSI.
+
+```
+cfg.serverChoiceMethod = 'file';
+```
+
 ## Mapping
 Sample configuration for one device
 
@@ -59,6 +67,21 @@ Sample configuration for one device
 
 ```
 exports.btNames['eq3_device1'] = { name: 'eq3_device1', address: '00:11:22:33:44:55', server: 1 };
+```
+
+## Automatic scanning (eq3.js)
+Scans every 3 hours if there is any not discovered device.
+
+```
+var scanFrequency = 3 * 60 * 60 * 1000;
+```
+
+## Scan timeout (eq3.js)
+30 seconds waiting for device discovery, till that time MQTT requests are waiting in queue.
+Timeout is cancelled if all defined devices are discovered earlier.
+
+```
+var scanTimoutTime = 30000;
 ```
 
 # Running
