@@ -55,7 +55,7 @@ Set to 'file' if there should be config file used for server assignment.
 Otherewise set to false (or remove) so server assignment will be done automatically based on RSSI.
 
 ```
-cfg.serverChoiceMethod = 'file';
+exports.serverChoiceMethod = 'file';
 ```
 
 ## Mapping
