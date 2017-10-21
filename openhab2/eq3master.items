@@ -1,0 +1,12 @@
+Switch 		eq3_master1_status					"Status [%s]"						(gPersist)		{mqtt="<[broker:/eq3_master/1/status:state:OFF:MAP(onoff.map)]"}
+Number		eq3_master1_queue					"Kolejka [%d]"						(gPersist)		{mqtt="<[broker:/eq3_master/1/queue:state:default]"}
+Number 		eq3_master1_queueFailed			    "Kolejka nieobsłużonych [%d]"		(gPersist)		{mqtt="<[broker:/eq3_master/1/queueFailed:state:default]"}
+String		eq3_master1_queueFailedMessages	    "Nieobsłużonych [%s]"								{mqtt="<[broker:/eq3_master/1/queueFailedMessages:state:default]"}
+String		eq3_master1_info					"Info [%s]"											{mqtt="<[broker:/eq3_master/1/info:state:default]"}
+String		eq3_master1_alldiscovered			"Wszystkie wykryte [%s]"							{mqtt="<[broker:/eq3_master/1/alldiscovered:state:default]"}
+String		eq3_master1_discovered				"Wykryte [%s]"										{mqtt="<[broker:/eq3_master/1/discovered:state:default]"}
+String		eq3_master1_notdiscovered			"Nie wykryte [%s]"									{mqtt="<[broker:/eq3_master/1/notdiscovered:state:default]"}
+Switch 		eq3_master1_scan					"Skanuj []"							(gPersist)		{mqtt=">[broker:/eq3_master/1/command:command:ON:scan]"}
+Switch 		eq3_master1_btrestart				"Bluetooth []"						(gPersist)		{mqtt=">[broker:/eq3_master/1/command:command:ON:btrestart]"}
+Switch 		eq3_master1_restart				    "Restart []"						(gPersist)		{mqtt=">[broker:/eq3_master/1/command:command:ON:restart]"}
+DateTime	eq3_master1_started				    "Started [%1$ta %1$tR]"				(gPersist)		{mqtt="<[broker:/eq3_master/1/started:state:default]"}
