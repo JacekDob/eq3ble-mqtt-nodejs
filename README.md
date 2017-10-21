@@ -98,13 +98,13 @@ Needs root privilages to access Bluetooth module
 
 ## Without logging
 ```
-sudo node eq3.js
+sudo eq3.js
 ```
 
 ## With logging
 
 ```
-sudo node eq3.js | tee -a eq3.log
+sudo eq3.js | tee -a eq3.log
 ```
 ## Autorun & Service
 
