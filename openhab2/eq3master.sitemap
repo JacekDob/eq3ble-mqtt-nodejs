@@ -1,23 +1,23 @@
 Frame 			label="Master 1" {
-	Text 		item=eq3_master1_status				    valuecolor=[==OFF="red",==ON="green"]   	icon="switch" {
-		Text 	item=eq3_master1_status				    valuecolor=[==OFF="red",==ON="green"]   	icon="switch"
-		Text 	item=eq3_master1_info																icon="text"
-		Text 	item=eq3_master1_started															icon="text"
-		Text 	item=eq3_master1_queue					valuecolor=[==0="green",>0="orange"]    	icon="chart"
-		Text 	item=eq3_master1_queueFailed			valuecolor=[==0="green",>0="red"]   		icon="chart" 		        
-		Text 	item=eq3_master1_queueFailedMessages	valuecolor=[!=""="red"]   					icon="text" 		        
-		Text 	item=eq3_master1_alldiscovered														icon="qualityofservice-1"
-		Text 	item=eq3_master1_discovered				    										icon="qualityofservice-1"
-		Text 	item=eq3_master1_notdiscovered			valuecolor=[!=""="red"]						icon="qualityofservice-0"
+	Text 	item=eq3_master1_status				valuecolor=[==OFF="red",==ON="green"]   	icon="switch" {
+	Text 	item=eq3_master1_status				valuecolor=[==OFF="red",==ON="green"]   	icon="switch"
+		Text 	item=eq3_master1_info									icon="text"
+		Text 	item=eq3_master1_started								icon="text"
+		Text 	item=eq3_master1_queue			valuecolor=[==0="green",>0="orange"]    	icon="chart"
+		Text 	item=eq3_master1_queueFailed		valuecolor=[==0="green",>0="red"]   		icon="chart" 		        
+		Text 	item=eq3_master1_queueFailedMessages	valuecolor=[!=""="red"]   			icon="text" 		        
+		Text 	item=eq3_master1_alldiscovered								icon="qualityofservice-1"
+		Text 	item=eq3_master1_discovered				    				icon="qualityofservice-1"
+		Text 	item=eq3_master1_notdiscovered		valuecolor=[!=""="red"]				icon="qualityofservice-0"
 
-		Switch 	item=eq3_master1_scan            		mappings=["ON"="Skanuj"]
-		Switch 	item=eq3_master1_btrestart       		mappings=["ON"="Restartuj"]					icon="bluetooth"
-		Switch 	item=eq3_master1_restart         		mappings=["ON"="Restartuj"]
+		Switch 	item=eq3_master1_scan            	mappings=["ON"="Skanuj"]
+		Switch 	item=eq3_master1_btrestart       	mappings=["ON"="Restartuj"]			icon="bluetooth"
+		Switch 	item=eq3_master1_restart         	mappings=["ON"="Restartuj"]
 	}
-	Text 		item=eq3_master1_queue					valuecolor=[==0="green",>0="orange"]    	icon="chart"				visibility=[eq3_master1_queue!="0"]
-	Text 		item=eq3_master1_info																icon="text"					visibility=[eq3_master1_info!="idle"]
-	Text 		item=eq3_master1_notdiscovered			valuecolor=[!=""="red"]						icon="qualityofservice-0"	visibility=[eq3_master1_notdiscovered!=""]
-	Text 		item=eq3_master1_discovered					    									icon="qualityofservice-1"	visibility=[eq3_master1_status=="scanning"]
-	Text 		item=eq3_master1_queueFailed			valuecolor=[==0="green",>0="red"]			icon="chart" 		        visibility=[eq3_master1_queueFailed!="0"]
-	Text 		item=eq3_master1_queueFailedMessages	valuecolor=[!=""="red"]						icon="text"					visibility=[eq3_master1_queueFailedMessages!=""]
+	Text 		item=eq3_master1_queue			valuecolor=[==0="green",>0="orange"]    	icon="chart"				visibility=[eq3_master1_queue!="0"]
+	Text 		item=eq3_master1_info									icon="text"					visibility=[eq3_master1_info!="idle"]
+	Text 		item=eq3_master1_notdiscovered		valuecolor=[!=""="red"]				icon="qualityofservice-0"	visibility=[eq3_master1_notdiscovered!=""]
+	Text 		item=eq3_master1_discovered					    			icon="qualityofservice-1"	visibility=[eq3_master1_status=="scanning"]
+	Text 		item=eq3_master1_queueFailed		valuecolor=[==0="green",>0="red"]		icon="chart" 		        visibility=[eq3_master1_queueFailed!="0"]
+	Text 		item=eq3_master1_queueFailedMessages	valuecolor=[!=""="red"]				icon="text"					visibility=[eq3_master1_queueFailedMessages!=""]
 }
