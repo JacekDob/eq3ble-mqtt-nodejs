@@ -159,11 +159,13 @@ For detailed description check [library node-eq3ble](https://github.com/maxnowac
 ### Items
 
 Put eq3.items to /etc/openhab2/items/eq3.items
+
 Put eq3master.items to /etc/openhab2/items/eq3master.items
 
 ### Sitemap
 
 Put eq3.sitemap to /etc/openhab2/sitemaps/_default.sitemap
+
 Put eq3master.sitemap to /etc/openhab2/sitemaps/_default.sitemap
 
 ### Rules
