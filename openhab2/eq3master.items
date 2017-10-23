@@ -1,4 +1,4 @@
-Switch 		eq3_master1_status		        "Status [%s]"				(gPersist)	{mqtt="<[broker:/eq3_master/1/status:state:OFF:MAP(onoff.map)]"}
+Switch 		eq3_master1_status		        "Status [%s]"				(gPersist)	{mqtt="<[broker:/eq3_master/1/status:state:MAP(onoff.map)]"}
 Number		eq3_master1_queue			"Kolejka [%d]"				(gPersist)	{mqtt="<[broker:/eq3_master/1/queue:state:default]"}
 Number 		eq3_master1_queueFailed			"Kolejka nieobsłużonych [%d]"		(gPersist)      {mqtt="<[broker:/eq3_master/1/queueFailed:state:default]"}
 String		eq3_master1_queueFailedMessages	        "Nieobsłużone [%s]"					{mqtt="<[broker:/eq3_master/1/queueFailedMessages:state:default]"}
