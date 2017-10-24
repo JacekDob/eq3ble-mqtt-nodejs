@@ -407,14 +407,14 @@ function clearDiscovered() {
 }
 
 function shouldHandle(btName) {
-	// simple:
-	if (cfg.serverChoiceMethod == 'auto') {
+	if (cfg.serverChoiceMethod == 'auto' || servers[btNames[btName].server].status == 0) {
 		var discovery = cfg.btNames[btName].discovery;
 		if (!discovery) {
 			notDiscoveredCount++;
 		}
 		return discovery && discovery.discovered && discovery.server == cfg.server;
 	}
+	// simple:
 
 	return btNames[btName].server == cfg.server || !btNames[btName].server;
 }
@@ -475,12 +475,16 @@ function processMessage(topic, message) {
 				automaticMode(device);
 			else if (m == '0')
 				manualMode(device);
-		} else if (action == 'outwish/ecoMode') {
-			ecoMode(device);
-		} else if (action == 'outwish/setLock') {
-			setLock(device, m);
+		} else if (action == 'outwish/eco') {
+			eco(device);
+		} else if (action == 'outwish/lock') {
+			lock(device, m);
 		} else if (action == 'outwish/turn') {
 			turn(device, m);
+                } else if (action == 'outwish/day') {
+                        setDay(device);
+                } else if (action == 'outwish/night') {
+                        setNight(device);
 		} else if (action == 'outwish/setOffset') {
 			setOffset(device, m);
 		} else {
@@ -502,7 +506,7 @@ function scanSequence() {
 
 	scanCount++;
 
-	if (scanCount > 2)
+	if (scanCount >= 2)
 		disconnectAll();
 
 	client.publish('/eq3_master/' + cfg.server + '/info', 'scanning (' + scanCount + ')', publishOptions);
@@ -513,7 +517,7 @@ function scanSequence() {
 		scanStarted = new Date();
 		scanTimeoutId = setTimeout(function () {
 				logV('Scan Timout');
-				if (scanCount >= 1 && scanCount <= 2) {
+				if (scanCount >= 1 && scanCount <= cfg.scanAtStartup) {
 					scanSequence();
 				} else {
 					processQueue();
@@ -632,8 +636,16 @@ function processInfo(device, info) {
 	client.publish('/' + device.btName + '/in/dst', info.status.dst ? '1' : '0', publishOptions);
 	client.publish('/' + device.btName + '/in/holiday', info.status.holiday ? '1' : '0', publishOptions);
 	client.publish('/' + device.btName + '/in/boost', info.status.boost ? '1' : '0', publishOptions);
+	client.publish('/' + device.btName + '/in/lock', info.status.lock ? '1' : '0', publishOptions);
+	var turn = '';
+	if (info.targetTemperature == 4.5) turn = 0;
+	if (info.targetTemperature == 30) turn = 1;
+
+	client.publish('/' + device.btName + '/in/turn', turn, publishOptions);
 
 	client.publish('/' + device.btName + '/in/try', (timeoutCount + 1).toString(), publishOptionsLow);
+	client.publish('/' + device.btName + '/in/info', '0', publishOptionsLow);
+	client.publish('/' + device.btName + '/in/server', cfg.server.toString(), publishOptionsLow);
 }
 
 function targetTemperature(device, t) {
@@ -689,7 +701,7 @@ function automaticMode(device) {
 
 }
 
-function setLock(device, enable) {
+function lock(device, enable) {
 
 	device.afterConnect(device.setLock.bind(device, enable == '1' ? true : false), (result) => {
 		logI('Setting lock=' + JSON.stringify(result) + ' OK');
@@ -697,12 +709,26 @@ function setLock(device, enable) {
 
 }
 
-function ecoMode(device) {
+function eco(device) {
 
 	device.afterConnect(device.ecoMode.bind(device), (result) => {
-		logI('Setting eco mode=' + JSON.stringify(result) + ' OK');
+		processInfo(device, result);
 	});
 
+}
+
+function setDay(device) {
+
+        device.afterConnect(device.setDay.bind(device), (result) => {
+		processInfo(device, result);
+        });
+}
+
+function setNight(device) {
+
+        device.afterConnect(device.setNight.bind(device), (result) => {
+		processInfo(device, result);
+        });
 }
 
 function turn(device, turnOn) {
@@ -769,13 +795,14 @@ NobleDevice.prototype.afterConnect = NobleDevice.prototype.afterConnect = functi
 			var performanceEnd = new Date();
 			var took = performanceEnd.getTime() - performanceStart.getTime();
 			logI('[' + this.address + '] [' + this.btName + '] Being connected and finished in ' + took + ' millis');
-			if (!retainConnection)
+			if (!retainConnection && device && device.disconnect)
 				device.disconnect();
 			clearTimeout(timeoutId);
 			finishedProcessing();
 		}).catch (function (error) {
 			logE('[' + this.address + '] [' + this.btName + '] Connecting failed! ' + error);
-			this.disconnect();
+			if (this && this.disconnect)
+				this.disconnect();
 			clearTimeout(timeoutId);
 			timeoutProcessing({
 				name: this.btName,
@@ -794,13 +821,14 @@ NobleDevice.prototype.afterConnect = NobleDevice.prototype.afterConnect = functi
 				var performanceEnd = new Date();
 				var took = performanceEnd.getTime() - performanceStart.getTime();
 				logI('[' + this.address + '] [' + this.btName + '] New connection finished in ' + took + ' millis');
-				if (!retainConnection)
+				if (!retainConnection && this && this.disconnect)
 					this.disconnect();
 				clearTimeout(timeoutId);
 				finishedProcessing();
 			}).catch (function (error) {
 				logE('[' + this.address + '] [' + this.btName + '] Running function failed! ' + error);
-				this.disconnect();
+				if (this && this.disconnect)
+					this.disconnect();
 				clearTimeout(timeoutId);
 				timeoutProcessing({
 					name: this.btName,
@@ -811,7 +839,8 @@ NobleDevice.prototype.afterConnect = NobleDevice.prototype.afterConnect = functi
 
 		}).catch (function (error) {
 			logE('[' + this.address + '] [' + this.btName + '] Connecting failed! ' + error);
-			this.disconnect();
+			if (this && this.disconnect)
+				this.disconnect();
 			clearTimeout(timeoutId);
 			timeoutProcessing({
 				name: this.btName,
@@ -903,7 +932,7 @@ Date.prototype.yyyymmdd = function () {
 	var yyyy = this.getFullYear();
 	var mm = this.getMonth() < 9 ? "0" + (this.getMonth() + 1) : (this.getMonth() + 1); // getMonth() is zero-based
 	var dd = this.getDate() < 10 ? "0" + this.getDate() : this.getDate();
-	return "".concat(yyyy).concat(mm).concat(dd);
+	return "".concat(yyyy).concat('-').concat(mm).concat('-').concat(dd);
 };
 
 Date.prototype.yyyymmddhhmm = function () {
@@ -912,7 +941,7 @@ Date.prototype.yyyymmddhhmm = function () {
 	var dd = this.getDate() < 10 ? "0" + this.getDate() : this.getDate();
 	var hh = this.getHours() < 10 ? "0" + this.getHours() : this.getHours();
 	var min = this.getMinutes() < 10 ? "0" + this.getMinutes() : this.getMinutes();
-	return "".concat(yyyy).concat(mm).concat(dd).concat(hh).concat(min);
+	return "".concat(yyyy).concat('-').concat(mm).concat('-').concat(dd).concat('T').concat(hh).concat(':').concat(min);
 };
 
 Date.prototype.yyyymmddhhmmss = function () {
@@ -922,7 +951,7 @@ Date.prototype.yyyymmddhhmmss = function () {
 	var hh = this.getHours() < 10 ? "0" + this.getHours() : this.getHours();
 	var min = this.getMinutes() < 10 ? "0" + this.getMinutes() : this.getMinutes();
 	var ss = this.getSeconds() < 10 ? "0" + this.getSeconds() : this.getSeconds();
-	return "".concat(yyyy).concat(mm).concat(dd).concat(hh).concat(min).concat(ss);
+	return "".concat(yyyy).concat('-').concat(mm).concat('-').concat(dd).concat('T').concat(hh).concat(':').concat(min).concat(':').concat(ss);
 };
 
 /* 
