@@ -1,23 +1,31 @@
-Frame                   label="Master IIDDXX" {
-        Text            item=eq3_masterIIDDXX_status                    valuecolor=[==OFF="red",==ON="green"]   icon="switch" {
-                Text    item=eq3_masterIIDDXX_status                    valuecolor=[==OFF="red",==ON="green"]   icon="switch"
-                Text    item=eq3_masterIIDDXX_info                                                              icon="text"
-                Text    item=eq3_masterIIDDXX_started                                                           icon="text"
-                Text    item=eq3_masterIIDDXX_queue                     valuecolor=[==0="green",>0="orange"]    icon="chart"
-                Text    item=eq3_masterIIDDXX_queueFailed               valuecolor=[==0="green",>0="red"]       icon="chart"
-                Text    item=eq3_masterIIDDXX_queueFailedMessages       valuecolor=[!=""="red"]                 icon="text"
-                Text    item=eq3_masterIIDDXX_alldiscovered                                                     icon="qualityofservice-1"
-                Text    item=eq3_masterIIDDXX_discovered                                                        icon="qualityofservice-1"
-                Text    item=eq3_masterIIDDXX_notdiscovered             valuecolor=[!=""="red"]                 icon="qualityofservice-0"
+Frame 			label="Master IIDDXX" {
+	Text 		item=eq3_masterIIDDXX_status			valuecolor=[==OFF="red",==ON="green"]   icon="switch" {
+		Frame	label="Status" {
+		Text 	item=eq3_masterIIDDXX_status			valuecolor=[==OFF="red",==ON="green"]   icon="switch"
+		Text 	item=eq3_masterIIDDXX_info								icon="text"
+		Text 	item=eq3_masterIIDDXX_started								icon="text"
+		}
+		Frame	label="Kolejki" {
+		Text 	item=eq3_masterIIDDXX_queue			valuecolor=[==0="green",>0="orange"]    icon="chart"
+		Text 	item=eq3_masterIIDDXX_queueFailed		valuecolor=[==0="green",>0="red"]   	icon="chart" 		        
+		Text 	item=eq3_masterIIDDXX_queueFailedMessages	valuecolor=[!=""="red"]   		icon="text" 		        
+		}
 
-                Switch  item=eq3_masterIIDDXX_scan                      mappings=["ON"="Skanuj"]
-                Switch  item=eq3_masterIIDDXX_btrestart                 mappings=["ON"="Restartuj"]             icon="bluetooth"
-                Switch  item=eq3_masterIIDDXX_restart                   mappings=["ON"="Restartuj"]
-        }
-        Text            item=eq3_masterIIDDXX_queue                     valuecolor=[==0="green",>0="orange"]    icon="chart"                    visibility=[eq3_masterIIDDXX_queue!="0"]
-        Text            item=eq3_masterIIDDXX_info                                                              icon="text"                     visibility=[eq3_masterIIDDXX_info!="idle"]
-        Text            item=eq3_masterIIDDXX_notdiscovered             valuecolor=[!=""="red"]                 icon="qualityofservice-0"       visibility=[eq3_masterIIDDXX_notdiscovered!=""]
-        Text            item=eq3_masterIIDDXX_discovered                                                        icon="qualityofservice-1"       visibility=[eq3_masterIIDDXX_status=="scanning"]
-        Text            item=eq3_masterIIDDXX_queueFailed               valuecolor=[==0="green",>0="red"]       icon="chart"                    visibility=[eq3_masterIIDDXX_queueFailed!="0"]
-        Text            item=eq3_masterIIDDXX_queueFailedMessages       valuecolor=[!=""="red"]                 icon="text"                     visibility=[eq3_masterIIDDXX_queueFailedMessages!=""]
+		Frame	label="Bluetooth" {
+		Text 	item=eq3_masterIIDDXX_alldiscovered							icon="qualityofservice-1"
+		Text 	item=eq3_masterIIDDXX_discovered							icon="qualityofservice-1"
+		Text 	item=eq3_masterIIDDXX_notdiscovered		valuecolor=[!=""="red"]			icon="qualityofservice-0"
+		Switch 	item=eq3_masterIIDDXX_scan            		mappings=["ON"="Skanuj"]
+		Switch 	item=eq3_masterIIDDXX_btrestart       		mappings=["ON"="Restartuj"]		icon="bluetooth"
+		}
+		Frame	label="Usługa" {
+		Switch 	item=eq3_masterIIDDXX_restart         		mappings=["ON"="Restartuj"]
+		}
+	}
+	Text 		item=eq3_masterIIDDXX_queue			valuecolor=[==0="green",>0="orange"]    icon="chart"			visibility=[eq3_masterIIDDXX_queue!="0"]
+	Text 		item=eq3_masterIIDDXX_info								icon="text"			visibility=[eq3_masterIIDDXX_info!="idle"]
+	Text 		item=eq3_masterIIDDXX_notdiscovered		valuecolor=[!=""="red"]			icon="qualityofservice-0"	visibility=[eq3_masterIIDDXX_notdiscovered!=""]
+	Text 		item=eq3_masterIIDDXX_discovered							icon="qualityofservice-1"	visibility=[eq3_masterIIDDXX_status=="scanning"]
+	Text 		item=eq3_masterIIDDXX_queueFailed		valuecolor=[==0="green",>0="red"]	icon="chart" 		        visibility=[eq3_masterIIDDXX_queueFailed!="0"]
+	Text 		item=eq3_masterIIDDXX_queueFailedMessages	valuecolor=[!=""="red"]			icon="text"			visibility=[eq3_masterIIDDXX_queueFailedMessages!=""]
 }
