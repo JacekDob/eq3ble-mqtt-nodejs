@@ -40,7 +40,14 @@ var payload = exports.payload = {
     return new Buffer('41' + (temperature <= 7.5 ? '0' : '') + (2 * temperature).toString(16), 'hex');
   },
   setTemperatureOffset: function setTemperatureOffset(offset) {
-    return new Buffer('13' + (2 * offset + 7).toString(16), 'hex');
+    console.log('Offset=', offset);
+    var b = Buffer.alloc(2);
+    b[0] = 19;
+    b[1] = 2 * offset + 7;
+    console.log('Buffer=', b);
+    return b;
+
+    //return new Buffer('13' + (2 * offset + 7).toString(16), 'hex');
   },
   setDay: function setDay() {
     return new Buffer('43', 'hex');
@@ -59,6 +66,8 @@ var payload = exports.payload = {
     return new Buffer('11' + temp + dur, 'hex');
   },
   setDatetime: function setDatetime(date) {
+    //date.setTime(date.getTime() + date.getTimezoneOffset() * 60 * 1000);
+
     var b = Buffer.alloc(7);
     b[0] = 3;
     b[1] = (date.getFullYear() % 100);
@@ -67,6 +76,9 @@ var payload = exports.payload = {
     b[4] = date.getHours();
     b[5] = date.getMinutes();
     b[6] = date.getSeconds();
+
+//    console.log('Setting date', b);
+
     return b;
   },
   requestProfile: function requestProfile(day) {
@@ -96,7 +108,7 @@ var status = {
   boost: 4,
   dst: 8,
   openWindow: 16,
-  unknown: 32,
+  lock: 32,
   unknown2: 64,
   lowBattery: 128
 };
@@ -113,6 +125,8 @@ function parseInfo(info) {
       boost: (statusMask & status.boost) === status.boost,
       dst: (statusMask & status.dst) === status.dst,
       openWindow: (statusMask & status.openWindow) === status.openWindow,
+      lock: (statusMask & status.lock) === status.lock,
+      unknown2: (statusMask & status.unknown2) === status.unknown2,
       lowBattery: (statusMask & status.lowBattery) === status.lowBattery
     },
     valvePosition: valvePosition,
@@ -142,3 +156,4 @@ function parseProfile(buffer) {
   }  
   return profile;
 }
+
