@@ -638,8 +638,8 @@ function processInfo(device, info) {
 	client.publish('/' + device.btName + '/in/boost', info.status.boost ? '1' : '0', publishOptions);
 	client.publish('/' + device.btName + '/in/lock', info.status.lock ? '1' : '0', publishOptions);
 	var turn = '';
-	if (info.targetTemperature == 4.5) turn = 0;
-	if (info.targetTemperature == 30) turn = 1;
+	if (info.targetTemperature == 4.5) turn = '0';
+	if (info.targetTemperature == 30) turn = '1';
 
 	client.publish('/' + device.btName + '/in/turn', turn, publishOptions);
 
