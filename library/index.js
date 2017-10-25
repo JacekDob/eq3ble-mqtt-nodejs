@@ -139,6 +139,20 @@ var EQ3BLE = function () {
       });
     }
   }, {
+    key: 'setDay',
+    value: function setDay() {
+      return this.writeAndGetNotification(_interface.payload.setDay()).then(function (info) {
+        return (0, _interface.parseInfo)(info);
+      });
+    }
+  }, {
+    key: 'setNight',
+    value: function setNight() {
+      return this.writeAndGetNotification(_interface.payload.setNight()).then(function (info) {
+        return (0, _interface.parseInfo)(info);
+      });
+    }
+  }, {
     key: 'setLock',
     value: function setLock(enable) {
       if (enable) {
@@ -184,7 +198,9 @@ var EQ3BLE = function () {
   }, {
     key: 'setTemperatureOffset',
     value: function setTemperatureOffset(offset) {
-      return this.writeAndGetNotification(_interface.payload.setTemperatureOffset(offset));
+      return this.writeAndGetNotification(_interface.payload.setTemperatureOffset(offset)).then(function (info) {
+        return (0, _interface.parseInfo)(info);
+      });
     }
   }, {
     key: 'updateOpenWindowConfiguration',
