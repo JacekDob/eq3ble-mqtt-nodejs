@@ -132,9 +132,9 @@ var EQ3BLE = function () {
       });
     }
   }, {
-    key: 'ecoMode',
-    value: function ecoMode() {
-      return this.writeAndGetNotification(_interface.payload.setEcoMode()).then(function (info) {
+    key: 'setVacationMode',
+    value: function setVacationMode(endTime, setPointTemperature) {
+      return this.writeAndGetNotification(_interface.payload.setVacationMode(endTime, setPointTemperature)).then(function (info) {
         return (0, _interface.parseInfo)(info);
       });
     }
