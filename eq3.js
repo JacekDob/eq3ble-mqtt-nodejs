@@ -51,6 +51,9 @@ var scanTimeoutId;
 
 var scanCount = 0;
 
+var lastBluetoothRestart = new Date();
+
+var lastBluetoothSuccess = {};
 
 function setServerIdx() {
 	if (!cfg.server) {
@@ -91,8 +94,10 @@ function processDiscovery(topic, message) {
 	var name = (topic.split('/'))[1];
 	var key = (topic.split('/'))[4];
 
-	if (!btNames[name])
+	if (!btNames[name]) {
+		return;
 		btNames[name] = {};
+	}
 
 	if (!key && btNames[name].discovery) {
 		delete btNames[name].discovery.server;
@@ -205,7 +210,24 @@ function processCommand(topic, message) {
 	var d = new Date();
 
 	if (d.getTime() - connectDate.getTime() > 500) {
-		addToQueue(topic, message);
+
+		var i1 = topic.indexOf('/');
+		var i2 = topic.indexOf('/', i1 + 1);
+		var action = topic.substring(i2 + 1);
+
+                if (action.indexOf('outwish/setProfile') >= 0) {
+                        var day = action.substring(action.lastIndexOf('/') + 1);
+			if (day.indexOf('-') >= 0) {
+				var days = day.split('-');
+				for (var i=parseInt(days[0]); i<=parseInt(days[1]); i++) {
+					addToQueue(topic.replace(day, i.toString()), message);
+				}
+			} else {
+				addToQueue(topic, message);
+			}
+		} else {
+			addToQueue(topic, message);
+		}
 
 		if (d.getTime() - scanStarted.getTime() > cfg.scanTimeoutTime * scanCount || !scanTimeoutId)
 			processQueue();
@@ -236,9 +258,10 @@ function getFailedMessagesString() {
 		for (var m = 0; m < queueFailed.length; m++) {
 			if (failedMessage != '')
 				failedMessage += ', ';
-			failedMessage += queueFailed[m].time.yyyymmddhhmmss + '|' + queueFailed[m].topic;
+			failedMessage += queueFailed[m].time.yyyymmddhhmmss() + '|' + queueFailed[m].task.topic;
 		}
 	}
+	return failedMessage;
 }
 
 function processQueue() {
@@ -281,6 +304,9 @@ function processQueue() {
 	if (queue.length == 0)
 		client.publish('/eq3_master/' + cfg.server + '/info', 'idle', publishOptions);
 	client.publish('/eq3_master/' + cfg.server + '/queue', queue.length.toString(), publishOptions);
+
+	if (queue.length == 0)
+		restartBluetoothIfNeeded();
 }
 
 function finishedProcessing() {
@@ -341,8 +367,10 @@ function cancelConnect() {
 function getAllDiscovered() {
 	var result = [];
 	for (var key in discovered) {
-		if (!key.includes(':')) {
-			result.push(btNames[key].friendlyname + ' (' + discovered[key].deviceInfo.rssi + ')');
+		if (discovered.hasOwnProperty(key)) {
+			if (!key.includes(':')) {
+				result.push(btNames[key].friendlyname + ' (' + discovered[key].deviceInfo.rssi + ')');
+			}
 		}
 	}
 	return result;
@@ -351,8 +379,10 @@ function getAllDiscovered() {
 function getDiscovered() {
 	var result = [];
 	for (var key in discovered) {
-		if (!key.includes(':') && btNames[key].server == cfg.server) {
-			result.push(btNames[key].friendlyname + ' (' + discovered[key].deviceInfo.rssi + ')');
+		if (discovered.hasOwnProperty(key)) {
+			if (!key.includes(':') && btNames[key].server == cfg.server) {
+				result.push(btNames[key].friendlyname + ' (' + discovered[key].deviceInfo.rssi + ')');
+			}
 		}
 	}
 	return result;
@@ -361,8 +391,10 @@ function getDiscovered() {
 function getNotDiscovered() {
 	var result = [];
 	for (var key in btNames) {
-		if (!key.includes(':') && btNames[key].server == cfg.server && !discovered[key]) {
-			result.push(btNames[key].friendlyname);
+		if (btNames.hasOwnProperty(key)) {
+			if (!key.includes(':') && btNames[key].server == cfg.server && !discovered[key]) {
+				result.push(btNames[key].friendlyname);
+			}
 		}
 	}
 	return result;
@@ -407,7 +439,10 @@ function clearDiscovered() {
 }
 
 function shouldHandle(btName) {
-	if (cfg.serverChoiceMethod == 'auto' || servers[btNames[btName].server].status == 0) {
+	if (!btNames[btName])
+		return false;
+
+	if (cfg.serverChoiceMethod == 'auto' || !servers[btNames[btName].server] || servers[btNames[btName].server].status == 0) {
 		var discovery = cfg.btNames[btName].discovery;
 		if (!discovery) {
 			notDiscoveredCount++;
@@ -437,6 +472,15 @@ function processMessage(topic, message) {
 		return;
 	}
 
+	if (!btNames[btName]) {
+		logW('Name [' + btName + ']  not mapped.');
+		queue.splice(0, 1);
+		timeoutCount = 0;
+		processing = false;
+		processQueue();
+		return;
+	}
+
 	if (shouldHandle(btName)) {
 		//if (cfg.btNames[btName].server == cfg.server || !cfg.btNames[btName].server) {
 
@@ -451,6 +495,10 @@ function processMessage(topic, message) {
 		}
 
 		device.btName = btName;
+
+		if (!lastBluetoothSuccess[device.btName]) {
+			lastBluetoothSuccess[device.btName] = new Date();
+		}
 
 		if (timeoutCount > 0) {
 			cancelConnect();
@@ -475,8 +523,9 @@ function processMessage(topic, message) {
 				automaticMode(device);
 			else if (m == '0')
 				manualMode(device);
-		} else if (action == 'outwish/eco') {
-			eco(device);
+		} else if (action == 'outwish/vacation') {
+			var json = JSON.parse(m);
+			vacation(device, json.endTime, json.temperature);
 		} else if (action == 'outwish/lock') {
 			lock(device, m);
 		} else if (action == 'outwish/turn') {
@@ -529,6 +578,9 @@ function scanSequence() {
 }
 
 function updateDiscovery(btName, clean) {
+	if (!btNames[btName])
+		return;
+
 	var discovery = cfg.btNames[btName].discovery;
 	var device = discovered[btName];
 	if (device) {
@@ -623,8 +675,13 @@ function calcEstimatedTemperature(targetTemperature, valvePosition) {
 
 function processInfo(device, info) {
 	var estimatedTemperature = calcEstimatedTemperature(info.targetTemperature);
+	var turn = '-';
+	if (info.targetTemperature == 4.5) turn = '0';
+	if (info.targetTemperature == 30) turn = '1';
 
 	logV('[' + device.address + '] [' + device.btName + '] [' + device._peripheral.rssi + 'dBm] Publishing to MQTT:' + JSON.stringify(info));
+
+	/*
 	client.publish('/' + device.btName + '/in/rssi', (device._peripheral.rssi * -1).toString(), publishOptions);
 	client.publish('/' + device.btName + '/in/targetTemperature', info.targetTemperature.toString(), publishOptions);
 	client.publish('/' + device.btName + '/in/valvePosition', info.valvePosition.toString(), publishOptions);
@@ -637,15 +694,45 @@ function processInfo(device, info) {
 	client.publish('/' + device.btName + '/in/holiday', info.status.holiday ? '1' : '0', publishOptions);
 	client.publish('/' + device.btName + '/in/boost', info.status.boost ? '1' : '0', publishOptions);
 	client.publish('/' + device.btName + '/in/lock', info.status.lock ? '1' : '0', publishOptions);
-	var turn = '';
-	if (info.targetTemperature == 4.5) turn = '0';
-	if (info.targetTemperature == 30) turn = '1';
-
 	client.publish('/' + device.btName + '/in/turn', turn, publishOptions);
-
 	client.publish('/' + device.btName + '/in/try', (timeoutCount + 1).toString(), publishOptionsLow);
 	client.publish('/' + device.btName + '/in/info', '0', publishOptionsLow);
 	client.publish('/' + device.btName + '/in/server', cfg.server.toString(), publishOptionsLow);
+	*/
+
+        if (!info) {
+                logW('info is undefined')
+                return;
+        }
+        if (!info.status) {
+                logW('info.status is undefined')
+                return;
+        }
+
+        if (info.targetTemperature == 4.5) turn = 'OFF';
+        else if (info.targetTemperature == 30) turn = 'ON';
+	else turn = 'NULL';
+
+	var json = {};
+	json.rssi 			= (device._peripheral.rssi * -1);
+	json.targetTemperature 		= info.targetTemperature;
+	json.valvePosition 		= info.valvePosition;
+	json.mode 			= info.status.manual ? 'OFF' : 'ON';
+	json.openWindow 		= info.status.openWindow ? 'OPEN' : 'CLOSED';
+	json.needsHeating		= info.valvePosition > 0 ? 'ON' : 'OFF';
+	json.estimatedTemperature	= estimatedTemperature;
+	json.lowBattery			= info.status.lowBattery ? 'ON' : 'OFF';
+	json.dst			= info.status.dst ? 'ON' : 'OFF';
+	json.holiday			= info.status.holiday ? 'ON' : 'OFF';
+	json.boost			= info.status.boost ? 'ON' : 'OFF';
+	json.lock			= info.status.lock ? 'ON' : 'OFF';
+	json.turn			= turn;
+	json.try			= (timeoutCount + 1);
+	json.info			= 'OFF';
+	json.server			= cfg.server;
+	client.publish('/' + device.btName + '/in/json', JSON.stringify(json), publishOptions);
+
+	lastBluetoothSuccess[device.btName] = new Date();
 }
 
 function targetTemperature(device, t) {
@@ -666,11 +753,13 @@ function requestProfile(device, day) {
 }
 
 function setProfile(device, day, periods) {
-
+	logI('[' + device.address + '] [' + device.btName + '] Setting profile day=' + day + ', periods=' + JSON.stringify(periods));
 	device.afterConnect(device.setProfile.bind(device, day, periods), (result) => {
 		if (result) {
+			client.publish('/' + device.btName + '/in/setProfile', '1', publishOptionsLow);
 			logI('[' + device.address + '] [' + device.btName + '] Setting profile OK.');
 		} else {
+			client.publish('/' + device.btName + '/in/setProfile', '0', publishOptionsLow);
 			logE('[' + device.address + '] [' + device.btName + '] Setting profile failed!');
 		}
 	});
@@ -709,9 +798,9 @@ function lock(device, enable) {
 
 }
 
-function eco(device) {
+function vacation(device, endTime, setPointTemperature) {
 
-	device.afterConnect(device.ecoMode.bind(device), (result) => {
+	device.afterConnect(device.ecoMode.bind(device, endTime, setPointTemperature), (result) => {
 		processInfo(device, result);
 	});
 
@@ -787,6 +876,7 @@ NobleDevice.prototype.afterConnect = NobleDevice.prototype.afterConnect = functi
 	var friendlyname = btNames[this.btName].friendlyname;
 
 	client.publish('/eq3_master/' + cfg.server + '/info', 'connecting to ' + friendlyname, publishOptions);
+	logV('Connecting to ' + friendlyname);
 
 	if (this._peripheral.state === 'connected') {
 		fn().then((result) => {
@@ -821,14 +911,19 @@ NobleDevice.prototype.afterConnect = NobleDevice.prototype.afterConnect = functi
 				var performanceEnd = new Date();
 				var took = performanceEnd.getTime() - performanceStart.getTime();
 				logI('[' + this.address + '] [' + this.btName + '] New connection finished in ' + took + ' millis');
-				if (!retainConnection && this && this.disconnect)
+				if (!retainConnection && this && this.disconnect) {
+					logI('[' + this.address + '] [' + this.btName + '] Disconnecting...');
 					this.disconnect();
+				}
 				clearTimeout(timeoutId);
 				finishedProcessing();
 			}).catch (function (error) {
-				logE('[' + this.address + '] [' + this.btName + '] Running function failed! ' + error);
-				if (this && this.disconnect)
-					this.disconnect();
+				if (this && this.address && this.btName)
+					logE('[' + this.address + '] [' + this.btName + '] Running function failed! ' + error);
+				else
+					logE('Running function failed! ' + error);
+				//if (this && this.disconnect)
+				//	this.disconnect();
 				clearTimeout(timeoutId);
 				timeoutProcessing({
 					name: this.btName,
@@ -897,6 +992,8 @@ function logW(message) {
 
 function restartBluetoothAdapter() {
 	//return;
+	scanCount = 0;
+	lastBluetoothRestart = new Date();
 	var cmd = "sudo service bluetooth stop && sleep 1 && sudo hciconfig hci0 down && sleep 1 && sudo hciconfig hci0 up && sudo service bluetooth start && sleep 1 && echo 'power on\nquit' | sudo bluetoothctl";
 
 	function puts(error, stdout, stderr) {
@@ -905,6 +1002,20 @@ function restartBluetoothAdapter() {
 
 	}
 	exec(cmd, puts);
+}
+
+function restartBluetoothIfNeeded() {
+	for (var key in lastBluetoothSuccess) {
+		if (lastBluetoothSuccess.hasOwnProperty(key)) {
+			var now = new Date();
+			if (now.getTime() - lastBluetoothSuccess[key].getTime() > cfg.restartBluetoothTime && now.getTime() - lastBluetoothRestart > cfg.restartBluetoothTime) {
+				logW('Restarting Bluetooth');
+				disconnectAll();
+				restartBluetoothAdapter();
+				return;
+			}
+		}
+	}
 }
 
 function disconnectAll() {
@@ -1073,7 +1184,7 @@ client.on('connect', function () {
 	client.subscribe('/eq3_master/' + cfg.server + '/exec');
 	client.subscribe('/eq3_master/' + cfg.server + '/command');
 	client.subscribe('/+/in/discovery/#');
-	client.subscribe('/+/outwish/+');
+	client.subscribe('/+/outwish/#');
 	client.publish('/eq3_master/' + cfg.server + '/status', '1', publishOptions);
 	client.publish('/eq3_master/' + cfg.server + '/started', new Date().yyyymmddhhmmss(), publishOptions);
 	client.publish('/eq3_master/' + cfg.server + '/info', 'initialized: ' + (noble.state === 'poweredOn' ? 'bluetooth on' : 'bluetooth off'), publishOptions);
