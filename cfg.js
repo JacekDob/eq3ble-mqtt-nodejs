@@ -15,7 +15,9 @@ exports.serverChoiceMethod = 'manual';
 
 exports.scanFrequency = 3 * 60 * 60 * 1000;
 exports.scanStarted;
-exports.scanTimeoutTime = 15 * 1000;
+exports.scanTimeoutTime = 25 * 1000;
+exports.scanAtStartup = 4;
 exports.connectTimeout = 15 * 1000;
 exports.retries = 1;
 exports.waitAfterFail = 5 * 60 * 1000;
+exports.restartBluetoothTime = 35 * 60 * 1000;
