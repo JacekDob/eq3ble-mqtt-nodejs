@@ -4,7 +4,7 @@ Switch		NNAAMMEE_turn			"turn [%s]"                             (gPersist,gEQ3_t
 Switch		NNAAMMEE_mode			"automatic mode [%s]"                   (gPersist,gEQ3_mode)			{mqtt="<[broker:/eq3_NNAAMMEE/in/mode:state:MAP(onoff.map)], >[broker:/eq3_NNAAMMEE/outwish/mode:command:*:MAP(onoff.map)]"}
 Number		NNAAMMEE_targetTemperature	"target temperature [%.1f]"             (gPersist,gEQ3_targetTemperature)	{mqtt="<[broker:/eq3_NNAAMMEE/in/targetTemperature:state:default], >[broker:/eq3_NNAAMMEE/outwish/targetTemperature:command:*:default]"}
 Switch		NNAAMMEE_boost			"boost [%s]"				(gPersist,gEQ3_boost)			{mqtt="<[broker:/eq3_NNAAMMEE/in/boost:state:MAP(onoff.map)], >[broker:/eq3_NNAAMMEE/outwish/boost:command:*:MAP(onoff.map)]"}
-Switch		NNAAMMEE_lock			"lock [%s]"				(gPersist,gEQ3_lock)			{mqtt="<[broker:/eq3_NNAAMMEE/in/lock:state:MAP(onoff.map)], >[broker:/eq3_NNAAMMEE/outwish/setLock:command:*:MAP(onoff.map)]"}
+Switch		NNAAMMEE_lock			"lock [%s]"				(gPersist,gEQ3_lock)			{mqtt="<[broker:/eq3_NNAAMMEE/in/lock:state:MAP(onoff.map)], >[broker:/eq3_NNAAMMEE/outwish/lock:command:*:MAP(onoff.map)]"}
 Switch		NNAAMMEE_eco			"eco [%s]"				(gPersist,gEQ3_eco)			{mqtt="<[broker:/eq3_NNAAMMEE/in/eco:state:MAP(onoff.map)], >[broker:/eq3_NNAAMMEE/outwish/eco:command:*:MAP(onoff.map)]"}
 Switch		NNAAMMEE_day			"day [%s]"				(gPersist,gEQ3_day)			{mqtt="<[broker:/eq3_NNAAMMEE/in/day:state:MAP(onoff.map)], >[broker:/eq3_NNAAMMEE/outwish/day:command:*:MAP(onoff.map)]"}
 Switch		NNAAMMEE_night			"night [%s]"				(gPersist,gEQ3_night)			{mqtt="<[broker:/eq3_NNAAMMEE/in/night:state:MAP(onoff.map)], >[broker:/eq3_NNAAMMEE/outwish/night:command:*:MAP(onoff.map)]"}
